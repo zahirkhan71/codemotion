@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>CodeMotion Studio — Production HTML-to-MP4 Engine</title>
+  <script src="https://cdn.jsdelivr.net/npm/modern-screenshot@4.6.0/dist/index.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.min.js"></script>
+  <style>
+    :root {
+      --bg-0: #090A0F;
+      --bg-1: #11131A;
+      --bg-2: #181B24;
+      --bg-3: #222734;
+      --border: #2A3040;
+      --border-light: #363E52;
+      --lime: #D9F54A;
+      --lime-dim: rgba(217, 245, 74, 0.14);
+      --teal: #00B894;
+      --danger: #EF4444;
+      --text: #F3F4F6;
+      --text-muted: #9CA3AF;
+      --radius: 10px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100dvh;
+      max-height: 100dvh;
+      background: var(--bg-0);
+      color: var(--text);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    svg {
+      flex-shrink: 0;
+    }
+
+    /* ================= 1. TOP APPLICATION HEADER ================= */
+    .app-header {
+      height: 56px;
+      min-height: 56px;
+      background: var(--bg-1);
+      border-bottom: 1px solid var(--border);
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      z-index: 30;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .brand-logo {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: var(--lime);
+      color: var(--bg-0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+    }
+
+    .brand-title {
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: -0.02em;
+    }
+
+    .version-chip {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: var(--lime-dim);
+      color: var(--lime);
+      border: 1px solid rgba(217, 245, 74, 0.3);
+    }
+
+    /* Quick Spec Pills on Desktop */
+    .header-specs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .spec-pill {
+      background: var(--bg-0);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 5px 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+    }
+
+    .spec-pill span {
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .spec-pill select,
+    .spec-pill input {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-weight: 700;
+      font-size: 12px;
+      outline: none;
+    }
+
+    .spec-pill input {
+      width: 40px;
+      text-align: center;
+    }
+
+    .header-cta-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      padding: 8px 13px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: 0.15s ease;
+      white-space: nowrap;
+      color: var(--text);
+      background: var(--bg-2);
+    }
+
+    .btn:hover {
+      background: var(--bg-3);
+    }
+
+    .btn-ghost {
+      background: var(--bg-2);
+      border-color: var(--border);
+    }
+
+    .btn-lime {
+      background: var(--lime);
+      color: var(--bg-0);
+      font-weight: 800;
+      box-shadow: 0 4px 18px rgba(217, 245, 74, 0.18);
+    }
+    .btn-lime:hover {
+      background: #cEEB3B;
+    }
+    .btn-lime:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-teal {
+      background: var(--teal);
+      color: #fff;
+      font-weight: 800;
+    }
+
+    /* ================= 2. NAVIGATION TABS (MOBILE & TABLET) ================= */
+    .mobile-nav {
+      display: none;
+      height: 46px;
+      min-height: 46px;
+      background: var(--bg-1);
+      border-bottom: 1px solid var(--border);
+      padding: 5px 10px;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      z-index: 25;
+    }
+
+    .nav-tab {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .nav-tab.active {
+      background: var(--bg-2);
+      color: var(--lime);
+      border-color: var(--border-light);
+    }
+
+    /* ================= 3. MAIN WORKSPACE ================= */
+    .workspace {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* LEFT PANE: CODE IDE */
+    .code-pane {
+      width: 450px;
+      min-width: 350px;
+      background: var(--bg-1);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      z-index: 15;
+    }
+
+    .code-pane.hidden-desktop {
+      display: none;
+    }
+
+    .code-toolbar {
+      height: 44px;
+      min-height: 44px;
+      padding: 0 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      background: var(--bg-1);
+    }
+
+    .tool-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .btn-tool {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 5px 9px;
+      border-radius: 7px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-tool:hover {
+      border-color: var(--border-light);
+      background: var(--bg-3);
+    }
+
+    .editor-wrapper {
+      flex: 1;
+      min-height: 0;
+      position: relative;
+      display: flex;
+    }
+
+    #codeInput {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      background: #07080C;
+      color: #E5E7EB;
+      border: none;
+      padding: 14px;
+      font-family: 'JetBrains Mono', 'Cascadia Code', Consolas, monospace;
+      font-size: 12.5px;
+      line-height: 1.55;
+      resize: none;
+      outline: none;
+      tab-size: 2;
+    }
+
+    .code-statusbar {
+      height: 30px;
+      min-height: 30px;
+      background: var(--bg-1);
+      border-top: 1px solid var(--border);
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* RIGHT PANE: STUDIO CANVAS & TIMELINE */
+    .studio-pane {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-0);
+      position: relative;
+    }
+
+    /* Sub-header HUD bar above Canvas */
+    .studio-hud {
+      height: 38px;
+      min-height: 38px;
+      padding: 0 12px;
+      background: rgba(17, 19, 26, 0.85);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 11.5px;
+    }
+
+    .hud-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--teal);
+    }
+
+    .hud-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hud-chip {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hud-chip.active {
+      border-color: var(--lime);
+      color: var(--lime);
+      background: var(--lime-dim);
+    }
+
+    /* Stage Viewport Container */
+    .viewport-box {
+      flex: 1;
+      min-height: 0;
+      position: relative;
+      overflow: hidden;
+      background: radial-gradient(circle at center, #141824 0%, #07080C 100%);
+    }
+
+    .stage-shell {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 1080px;
+      height: 1920px;
+      transform-origin: center center;
+      transform: translate(-50%, -50%) scale(0.25);
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85), 0 0 0 2px #2E3648;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #000;
+    }
+
+    #previewIframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+      background: #fff;
+    }
+
+    /* Optional Reels/Shorts Safe-Zone Guide Overlay */
+    .safe-zone-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: none;
+      border: 4px dashed rgba(217, 245, 74, 0.45);
+    }
+
+    .safe-zone-overlay.visible {
+      display: block;
+    }
+
+    .safe-zone-inner {
+      position: absolute;
+      top: 10%;
+      bottom: 14%;
+      left: 6%;
+      right: 6%;
+      border: 3px solid rgba(0, 184, 148, 0.65);
+      border-radius: 18px;
+    }
+
+    .safe-zone-label {
+      position: absolute;
+      top: 16px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.75);
+      color: var(--lime);
+      font-size: 26px;
+      font-weight: 800;
+      padding: 8px 18px;
+      border-radius: 8px;
+    }
+
+    /* ================= 4. ERGONOMIC TIMELINE CONTROL BAR ================= */
+    .timeline-bar {
+      background: var(--bg-1);
+      border-top: 1px solid var(--border);
+      padding: 10px 14px 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 20;
+    }
+
+    /* Range Slider with Custom Track */
+    .scrubber-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #scrubber {
+      flex: 1;
+      height: 6px;
+      accent-color: var(--lime);
+      cursor: pointer;
+    }
+
+    .timeline-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .transport-cluster {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-icon {
+      height: 34px;
+      min-width: 34px;
+      padding: 0 10px;
+      border-radius: 8px;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      cursor: pointer;
+    }
+    .btn-icon:hover {
+      background: var(--bg-3);
+      border-color: var(--border-light);
+    }
+    .btn-icon.play-main {
+      background: var(--lime);
+      color: var(--bg-0);
+      border-color: var(--lime);
+      padding: 0 14px;
+      font-weight: 800;
+    }
+    .btn-icon.active-toggle {
+      border-color: var(--lime);
+      color: var(--lime);
+    }
+
+    .time-readout {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .time-readout strong {
+      color: var(--lime);
+      font-weight: 800;
+    }
+
+    /* ================= 5. AI PROMPT & ENGINE SETUP DRAWER ================= */
+    .setup-pane {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: var(--bg-0);
+      z-index: 28;
+      padding: 16px;
+      overflow-y: auto;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .setup-pane.open {
+      display: flex;
+    }
+
+    .setup-container {
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding-bottom: 30px;
+    }
+
+    .setup-card {
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-head h3 {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--lime);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .field label {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .field select,
+    .field input {
+      background: var(--bg-0);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 9px 11px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      outline: none;
+    }
+
+    .style-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .style-chip {
+      background: var(--bg-0);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 6px 11px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .style-chip.active {
+      background: var(--lime-dim);
+      color: var(--lime);
+      border-color: var(--lime);
+    }
+
+    #systemPromptBox {
+      width: 100%;
+      height: 200px;
+      background: #07080C;
+      border: 1px solid var(--border);
+      color: #D1D5DB;
+      padding: 12px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 11.5px;
+      line-height: 1.45;
+      resize: none;
+      outline: none;
+    }
+
+    /* ================= 6. DEDICATED RENDER PROGRESS MODAL ================= */
+    .render-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 6, 10, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .render-modal.active {
+      display: flex;
+    }
+
+    .render-box {
+      width: 100%;
+      max-width: 420px;
+      background: var(--bg-1);
+      border: 1px solid var(--border-light);
+      border-radius: 16px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      text-align: center;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+    }
+
+    .render-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .render-sub {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 10px;
+      background: var(--bg-0);
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--teal), var(--lime));
+      transition: width 0.1s linear;
+    }
+
+    .render-stats {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      background: var(--bg-0);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--bg-3);
+      color: var(--lime);
+      border: 1px solid var(--lime);
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      transition: 0.2s ease;
+      z-index: 200;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ================= RESPONSIVE MOBILE RULES ================= */
+    @media (max-width: 920px) {
+      .header-specs,
+      #btnDesktopCodeToggle,
+      #btnDesktopPromptToggle,
+      #btnCloseSetupDesktop {
+        display: none !important;
+      }
+
+      .mobile-nav {
+        display: grid;
+      }
+
+      .code-pane {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        border-right: none;
+        display: none;
+      }
+
+      .code-pane.mobile-open {
+        display: flex;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================= 1. TOP BAR ================= -->
+  <header class="app-header">
+    <div class="brand-group">
+      <div class="brand-logo">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M13 2L4 14H12L11 22L20 10H12L13 2Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="brand-title">CodeMotion</span>
+      <span class="version-chip">v3.0 PRO</span>
+    </div>
+
+    <!-- Desktop Quick Specs -->
+    <div class="header-specs">
+      <div class="spec-pill">
+        <span>Size</span>
+        <select id="resDesktop" onchange="syncSetting('res', this.value)">
+          <option value="1080x1920">1080 × 1920 (FHD)</option>
+          <option value="1440x2560" selected>1440 × 2560 (2K QHD)</option>
+          <option value="1920x1080">1920 × 1080 (16:9)</option>
+        </select>
+      </div>
+      <div class="spec-pill">
+        <span>FPS</span>
+        <select id="fpsDesktop" onchange="syncSetting('fps', this.value)">
+          <option value="30" selected>30</option>
+          <option value="60">60</option>
+        </select>
+      </div>
+      <div class="spec-pill">
+        <span>Dur</span>
+        <input type="number" id="durDesktop" value="10" min="1" max="120" onchange="syncSetting('dur', this.value)" />
+        <span>s</span>
+      </div>
+    </div>
+
+    <!-- Top Right Actions -->
+    <div class="header-cta-group">
+      <button class="btn btn-ghost" id="btnDesktopCodeToggle" onclick="toggleDesktopCode()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+        </svg>
+        <span>Code</span>
+      </button>
+
+      <button class="btn btn-ghost" id="btnDesktopPromptToggle" onclick="toggleSetupDrawer()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        <span>AI Prompt & Setup</span>
+      </button>
+
+      <button class="btn btn-lime" id="btnExportMain" onclick="startExportWorkflow()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        <span>Render MP4</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ================= 2. MOBILE 3-TAB BAR ================= -->
+  <nav class="mobile-nav">
+    <button class="nav-tab active" id="tabBtnPreview" onclick="switchTab('preview')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+      </svg>
+      <span>Preview</span>
+    </button>
+    <button class="nav-tab" id="tabBtnCode" onclick="switchTab('code')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+      </svg>
+      <span>HTML Code</span>
+    </button>
+    <button class="nav-tab" id="tabBtnSetup" onclick="switchTab('setup')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+      </svg>
+      <span>AI & Setup</span>
+    </button>
+  </nav>
+
+  <!-- ================= 3. MAIN WORKSPACE ================= -->
+  <main class="workspace">
+
+    <!-- LEFT: CODE EDITOR WITH 1-TAP MOBILE ACTIONS -->
+    <section class="code-pane" id="codePane">
+      <div class="code-toolbar">
+        <div class="tool-group">
+          <button class="btn-tool" onclick="pasteFromClipboard()" title="Paste code from clipboard">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/>
+            </svg>
+            <span>Paste</span>
+          </button>
+          <button class="btn-tool" onclick="copyCurrentCode()" title="Copy current HTML code">
+            <span>Copy</span>
+          </button>
+          <button class="btn-tool" onclick="clearEditorCode()" title="Clear editor">
+            <span>Clear</span>
+          </button>
+          <button class="btn-tool" onclick="resetStarterTemplate()" title="Load starter template">
+            <span>Demo</span>
+          </button>
+        </div>
+
+        <button class="btn btn-teal" style="padding: 6px 12px; font-size: 11.5px;" onclick="compileAndPreview()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          <span>Run & Preview</span>
+        </button>
+      </div>
+
+      <div class="editor-wrapper">
+        <textarea id="codeInput" spellcheck="false" oninput="updateCodeMetrics()"></textarea>
+      </div>
+
+      <div class="code-statusbar">
+        <span id="codeStatsText">Lines: 0 · Chars: 0</span>
+        <span id="autoSaveBadge">Auto-saved locally</span>
+      </div>
+    </section>
+
+    <!-- RIGHT: STUDIO PREVIEW & TIMELINE -->
+    <section class="studio-pane" id="studioPane">
+      <!-- Canvas HUD -->
+      <div class="studio-hud">
+        <div class="hud-status">
+          <span class="status-dot"></span>
+          <span id="engineStatusText">Ready · Deterministic Sync</span>
+        </div>
+
+        <div class="hud-actions">
+          <button class="hud-chip" id="btnSafeZone" onclick="toggleSafeZone()">Safe Zone</button>
+          <span class="hud-chip" id="resScaleChip">1440 × 2560</span>
+        </div>
+      </div>
+
+      <!-- True Virtual Stage Box -->
+      <div class="viewport-box" id="viewportBox">
+        <div class="stage-shell" id="stageShell">
+          <iframe id="previewIframe" sandbox="allow-scripts allow-same-origin"></iframe>
+          <div class="safe-zone-overlay" id="safeZoneOverlay">
+            <div class="safe-zone-inner">
+              <span class="safe-zone-label">9:16 REELS / SHORTS SAFE AREA</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ergonomic Bottom Timeline Scrubber -->
+      <div class="timeline-bar">
+        <div class="scrubber-row">
+          <input type="range" id="scrubber" min="0" max="10" step="0.001" value="0" oninput="onScrubInput(this.value)" />
+        </div>
+
+        <div class="timeline-controls">
+          <div class="transport-cluster">
+            <button class="btn-icon play-main" id="btnPlayToggle" onclick="togglePlayback()">
+              <svg id="iconPlay" width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              <span id="playBtnText">Play</span>
+            </button>
+
+            <button class="btn-icon" onclick="restartPlayback()" title="Restart (0.00s)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/>
+              </svg>
+            </button>
+
+            <button class="btn-icon" onclick="stepSingleFrame(-1)" title="Previous Frame">-1F</button>
+            <button class="btn-icon" onclick="stepSingleFrame(1)" title="Next Frame">+1F</button>
+
+            <button class="btn-icon active-toggle" id="btnLoopToggle" onclick="toggleLoop()" title="Toggle Loop">
+              Loop
+            </button>
+          </div>
+
+          <div class="time-readout">
+            <span><strong id="timeCurrent">0.00s</strong> / <span id="timeTotal">10.00s</span></span>
+            <span>·</span>
+            <span>F <strong id="frameCurrent">000</strong>/<span id="frameTotal">300</span></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETUP & AI SYSTEM PROMPT GENERATOR PANE -->
+    <section class="setup-pane" id="setupPane">
+      <div class="setup-container">
+        <div style="display:flex; justify-content:space-between; align-items:center;" id="btnCloseSetupDesktop">
+          <h2 style="font-size:16px;">Engine Configuration & AI Prompt Studio</h2>
+          <button class="btn btn-ghost" onclick="toggleSetupDrawer()">✕ Close</button>
+        </div>
+
+        <div class="setup-card">
+          <div class="card-head">
+            <h3>1. Output Render Specifications</h3>
+            <span style="font-size:11px; color:var(--text-muted);">Auto-syncs with <code>window.VIDEO_DURATION</code></span>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label>Target Resolution</label>
+              <select id="resMobile" onchange="syncSetting('res', this.value)">
+                <option value="1080x1920">1080 × 1920 (FHD 9:16)</option>
+                <option value="1440x2560" selected>1440 × 2560 (2K QHD 9:16)</option>
+                <option value="1920x1080">1920 × 1080 (YouTube 16:9)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Frame Rate (FPS)</label>
+              <select id="fpsMobile" onchange="syncSetting('fps', this.value)">
+                <option value="30" selected>30 FPS (Standard)</option>
+                <option value="60">60 FPS (Ultra Smooth)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Duration (Seconds)</label>
+              <input type="number" id="durMobile" value="10" min="1" max="120" onchange="syncSetting('dur', this.value)" />
+            </div>
+          </div>
+        </div>
+
+        <div class="setup-card">
+          <div class="card-head">
+            <h3>2. AI System Prompt Generator (Claude / Gemini / ChatGPT)</h3>
+          </div>
+
+          <div class="field">
+            <label>Choose Motion Design Direction</label>
+            <div class="style-pills" id="stylePresetGroup">
+              <button class="style-chip active" data-style="Warm Editorial (#F4F3EE off-white, #D9F54A lime highlights, floating white UI cards, bold condensed typography)">Warm Editorial</button>
+              <button class="style-chip" data-style="Dark SaaS Cyber (#0B0D13 background, neon cyan/lime accents, glassmorphic UI cards, crisp geometric grids)">Dark SaaS</button>
+              <button class="style-chip" data-style="Minimalist Mobile App Showcase (clean smartphone mockup, smooth card transitions, high-contrast typography)">App UI Showcase</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Product / Video Topic (No hardcoded duration conflict)</label>
+            <input type="text" id="topicInput" value="MedRemind — Android Medicine Reminder App Promo" oninput="buildSystemPrompt()" />
+          </div>
+
+          <textarea id="systemPromptBox" readonly></textarea>
+
+          <button class="btn btn-lime" style="width:100%; padding:11px;" onclick="copyGeneratedPrompt()">
+            <span>Copy AI System Prompt</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= 4. PRODUCTION RENDER PROGRESS MODAL ================= -->
+  <div class="render-modal" id="renderModal">
+    <div class="render-box">
+      <div class="render-title" id="renderModalTitle">Rendering 2K MP4 Video...</div>
+      <div class="render-sub" id="renderModalSub">Please keep this tab open while frames are encoded.</div>
+
+      <div class="progress-track">
+        <div class="progress-fill" id="renderProgressBar"></div>
+      </div>
+
+      <div class="render-stats">
+        <span id="renderFrameStat">Frame: 0 / 300</span>
+        <span id="renderPctStat">0%</span>
+        <span id="renderEtaStat">ETA: --s</span>
+      </div>
+
+      <button class="btn btn-ghost" id="btnCancelRender" style="border-color: var(--danger); color: var(--danger);" onclick="cancelActiveRender()">
+        Cancel Render
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Feedback -->
+  <div class="toast" id="toastBox">Copied!</div>
+
+  <script>
+    // ================= DEFAULT STARTER TEMPLATE =================
+    const STARTER_HTML = `<!DOCTYPE html>
+<html>
+<head>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }
+  body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 45%, #EFF3E6 0%, #F4F3EE 70%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #191919;
+  }
+  .logo-box {
+    width: 150px;
+    height: 150px;
+    border-radius: 38px;
+    background: #00897B;
+    border: 4px solid #191919;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 42px;
+    box-shadow: 0 24px 50px rgba(0, 137, 123, 0.22);
+  }
+  .brand-name {
+    font-size: 118px;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    margin-bottom: 18px;
+  }
+  .tagline {
+    font-size: 46px;
+    font-weight: 600;
+    color: #6E706A;
+    margin-bottom: 64px;
+  }
+  .cta-pill {
+    background: #00897B;
+    color: #FFFFFF;
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    padding: 30px 64px;
+    border-radius: 999px;
+    border: 3.5px solid #191919;
+    box-shadow: 0 20px 44px rgba(0, 137, 123, 0.25);
+  }
+</style>
+</head>
+<body>
+  <div class="logo-box" id="logo">
+    <svg width="86" height="86" viewBox="0 0 86 86" fill="none">
+      <rect x="14" y="34" width="58" height="22" rx="11" transform="rotate(-28 14 34)" fill="#FFFFFF" stroke="#191919" stroke-width="4"/>
+      <circle cx="58" cy="28" r="9" fill="#D9F54A" stroke="#191919" stroke-width="3"/>
+    </svg>
+  </div>
+  <div class="brand-name" id="brand">MedRemind</div>
+  <div class="tagline" id="tag">Never Miss Your Medicine</div>
+  <div class="cta-pill" id="cta">YOUR DAILY MEDICINE COMPANION</div>
+
+  <script>
+    window.VIDEO_DURATION = 10;
+    window.VIDEO_FPS = 30;
+
+    function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+    function prog(t, s, e) { return clamp((t - s) / (e - s), 0, 1); }
+    function easeOut(x) { return 1 - Math.pow(1 - x, 3.2); }
+
+    window.renderFrame = function(t) {
+      const p1 = easeOut(prog(t, 0.0, 0.7));
+      const p2 = easeOut(prog(t, 0.2, 0.9));
+      const p3 = easeOut(prog(t, 0.4, 1.1));
+      const p4 = easeOut(prog(t, 0.6, 1.3));
+
+      const logo = document.getElementById('logo');
+      const brand = document.getElementById('brand');
+      const tag = document.getElementById('tag');
+      const cta = document.getElementById('cta');
+
+      logo.style.opacity = p1;
+      logo.style.transform = \`translateY(\${(1 - p1) * 35}px) scale(\${0.85 + 0.15 * p1})\`;
+
+      brand.style.opacity = p2;
+      brand.style.transform = \`translateY(\${(1 - p2) * 30}px)\`;
+
+      tag.style.opacity = p3;
+      tag.style.transform = \`translateY(\${(1 - p3) * 25}px)\`;
+
+      cta.style.opacity = p4;
+      cta.style.transform = \`translateY(\${(1 - p4) * 25}px) scale(\${0.92 + 0.08 * p4})\`;
+    };
+  <\/script>
+</body>
+</html>`;
+
+    // ================= ENGINE STATE =================
+    const STORAGE_KEY = 'codemotion_v3_saved_code';
+    let stageWidth = 1440;
+    let stageHeight = 2560;
+    let fps = 30;
+    let duration = 10;
+    let currentTime = 0;
+    let isPlaying = false;
+    let loopEnabled = true;
+    let cancelRenderRequested = false;
+    let selectedStylePreset = 'Warm Editorial (#F4F3EE off-white, #D9F54A lime highlights, floating white UI cards, bold condensed typography)';
+    let rafId = null;
+    let lastRafTime = null;
+
+    const codeInput = document.getElementById('codeInput');
+    const previewIframe = document.getElementById('previewIframe');
+    const stageShell = document.getElementById('stageShell');
+    const viewportBox = document.getElementById('viewportBox');
+    const scrubber = document.getElementById('scrubber');
+    const engineStatusText = document.getElementById('engineStatusText');
+
+    // Load saved code or starter template
+    const saved = localStorage.getItem(STORAGE_KEY);
+    codeInput.value = saved && saved.trim().length > 20 ? saved : STARTER_HTML;
+
+    function showToast(msg) {
+      const t = document.getElementById('toastBox');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2100);
+    }
+
+    // 1. Scale Stage Mathematically without distorting internal iframe viewport
+    function fitStageToViewport() {
+      const rect = viewportBox.getBoundingClientRect();
+      const pad = 24;
+      const availW = Math.max(100, rect.width - pad);
+      const availH = Math.max(100, rect.height - pad);
+      const scale = Math.min(availW / stageWidth, availH / stageHeight);
+
+      stageShell.style.width = `${stageWidth}px`;
+      stageShell.style.height = `${stageHeight}px`;
+      stageShell.style.transform = `translate(-50%, -50%) scale(${scale.toFixed(4)})`;
+
+      const pct = Math.round(scale * 100);
+      document.getElementById('resScaleChip').textContent = `${stageWidth} × ${stageHeight} (${pct}%)`;
+    }
+
+    new ResizeObserver(fitStageToViewport).observe(viewportBox);
+    window.addEventListener('resize', fitStageToViewport);
+
+    // 2. Sync Settings Across Mobile & Desktop
+    function syncSetting(key, val, skipPromptRebuild = false) {
+      if (key === 'res') {
+        document.getElementById('resDesktop').value = val;
+        document.getElementById('resMobile').value = val;
+        const [w, h] = val.split('x').map(Number);
+        stageWidth = w;
+        stageHeight = h;
+        fitStageToViewport();
+      } else if (key === 'fps') {
+        fps = Number(val) || 30;
+        document.getElementById('fpsDesktop').value = String(fps);
+        document.getElementById('fpsMobile').value = String(fps);
+      } else if (key === 'dur') {
+        duration = Math.max(1, Number(val) || 10);
+        document.getElementById('durDesktop').value = duration;
+        document.getElementById('durMobile').value = duration;
+        scrubber.max = duration;
+        document.getElementById('timeTotal').textContent = `${duration.toFixed(2)}s`;
+      }
+      document.getElementById('frameTotal').textContent = String(Math.round(duration * fps));
+      if (!skipPromptRebuild) buildSystemPrompt();
+      seekToTime(Math.min(currentTime, duration));
+    }
+
+    // 3. Tab Navigation (Hides bottom timeline implicitly when in Code/Setup tabs on mobile)
+    function switchTab(tab) {
+      document.getElementById('tabBtnPreview').classList.toggle('active', tab === 'preview');
+      document.getElementById('tabBtnCode').classList.toggle('active', tab === 'code');
+      document.getElementById('tabBtnSetup').classList.toggle('active', tab === 'setup');
+
+      document.getElementById('codePane').classList.toggle('mobile-open', tab === 'code');
+      document.getElementById('setupPane').classList.toggle('open', tab === 'setup');
+
+      if (tab !== 'preview') pausePlayback();
+      if (tab === 'preview') setTimeout(fitStageToViewport, 30);
+    }
+
+    function toggleDesktopCode() {
+      document.getElementById('codePane').classList.toggle('hidden-desktop');
+      setTimeout(fitStageToViewport, 30);
+    }
+
+    function toggleSetupDrawer() {
+      buildSystemPrompt();
+      document.getElementById('setupPane').classList.toggle('open');
+    }
+
+    function toggleSafeZone() {
+      const overlay = document.getElementById('safeZoneOverlay');
+      const btn = document.getElementById('btnSafeZone');
+      overlay.classList.toggle('visible');
+      btn.classList.toggle('active');
+    }
+
+    // 4. Code Editor Utilities
+    function updateCodeMetrics() {
+      const val = codeInput.value;
+      const lines = val.split('\n').length;
+      document.getElementById('codeStatsText').textContent = `Lines: ${lines} · Chars: ${val.length}`;
+      try {
+        localStorage.setItem(STORAGE_KEY, val);
+      } catch (_) {}
+    }
+
+    async function pasteFromClipboard() {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          codeInput.value = text;
+          updateCodeMetrics();
+          showToast('Code pasted from clipboard!');
+        }
+      } catch (_) {
+        codeInput.focus();
+        showToast('Long-press inside editor to paste');
+      }
+    }
+
+    function copyCurrentCode() {
+      navigator.clipboard.writeText(codeInput.value);
+      showToast('HTML Code Copied!');
+    }
+
+    function clearEditorCode() {
+      if (confirm('Clear all code in the editor?')) {
+        codeInput.value = '';
+        updateCodeMetrics();
+      }
+    }
+
+    function resetStarterTemplate() {
+      codeInput.value = STARTER_HTML;
+      updateCodeMetrics();
+      compileAndPreview();
+      showToast('Demo template loaded');
+    }
+
+    // 5. Compile User Code & Auto-Detect Metadata (VIDEO_DURATION / VIDEO_FPS)
+    function compileAndPreview() {
+      pausePlayback();
+      updateCodeMetrics();
+
+      const doc = previewIframe.contentDocument || previewIframe.contentWindow.document;
+      doc.open();
+      doc.write(codeInput.value);
+      doc.close();
+
+      setTimeout(() => {
+        fitStageToViewport();
+        const win = previewIframe.contentWindow;
+        if (!win) return;
+
+        // Auto-sync VIDEO_DURATION and VIDEO_FPS if exported by user's script
+        if (typeof win.VIDEO_DURATION === 'number' && win.VIDEO_DURATION > 0) {
+          syncSetting('dur', win.VIDEO_DURATION, true);
+        }
+        if (typeof win.VIDEO_FPS === 'number' && (win.VIDEO_FPS === 30 || win.VIDEO_FPS === 60)) {
+          syncSetting('fps', win.VIDEO_FPS, true);
+        }
+
+        // Neutralize internal fitStage scaling inside iframe if user pasted standalone fullscreen code
+        const innerStage = win.document.getElementById('video-stage');
+        if (innerStage) {
+          innerStage.style.transform = 'none';
+        }
+
+        const hasRenderFrame = typeof win.renderFrame === 'function';
+        engineStatusText.textContent = hasRenderFrame
+          ? `Ready · Auto-Synced (${duration}s @ ${fps} FPS)`
+          : 'Ready · CSS @keyframes Sync';
+
+        seekToTime(0);
+        if (window.innerWidth <= 920) switchTab('preview');
+      }, 140);
+    }
+
+    // 6. Deterministic Frame Seeker
+    function seekToTime(t) {
+      currentTime = Math.max(0, Math.min(duration, Number(t) || 0));
+      const totalFrames = Math.round(duration * fps);
+      const frameIdx = Math.min(totalFrames - 1, Math.floor(currentTime * fps + 1e-5));
+
+      document.getElementById('timeCurrent').textContent = `${currentTime.toFixed(2)}s`;
+      document.getElementById('frameCurrent').textContent = String(Math.max(0, frameIdx)).padStart(3, '0');
+      scrubber.value = currentTime;
+
+      const win = previewIframe.contentWindow;
+      const doc = previewIframe.contentDocument;
+      if (!win || !doc) return;
+
+      if (typeof win.renderFrame === 'function') {
+        try { win.renderFrame(currentTime); } catch (e) {}
+      }
+
+      if (typeof doc.getAnimations === 'function') {
+        doc.getAnimations({ subtree: true }).forEach((anim) => {
+          anim.pause();
+          anim.currentTime = currentTime * 1000;
+        });
+      }
+    }
+
+    // 7. Playback Loop
+    function playbackTick(now) {
+      if (!isPlaying) return;
+      if (!lastRafTime) lastRafTime = now;
+      const dt = (now - lastRafTime) / 1000;
+      lastRafTime = now;
+
+      currentTime += dt;
+      if (currentTime >= duration) {
+        if (loopEnabled) {
+          currentTime = 0;
+        } else {
+          seekToTime(duration);
+          pausePlayback();
+          return;
+        }
+      }
+      seekToTime(currentTime);
+      rafId = requestAnimationFrame(playbackTick);
+    }
+
+    function togglePlayback() {
+      if (isPlaying) {
+        pausePlayback();
+      } else {
+        if (currentTime >= duration) currentTime = 0;
+        isPlaying = true;
+        lastRafTime = null;
+        document.getElementById('playBtnText').textContent = 'Pause';
+        rafId = requestAnimationFrame(playbackTick);
+      }
+    }
+
+    function pausePlayback() {
+      isPlaying = false;
+      lastRafTime = null;
+      if (rafId) cancelAnimationFrame(rafId);
+      document.getElementById('playBtnText').textContent = 'Play';
+    }
+
+    function restartPlayback() {
+      pausePlayback();
+      seekToTime(0);
+      togglePlayback();
+    }
+
+    function stepSingleFrame(delta) {
+      pausePlayback();
+      const currentFrame = Math.round(currentTime * fps);
+      seekToTime((currentFrame + delta) / fps);
+    }
+
+    function toggleLoop() {
+      loopEnabled = !loopEnabled;
+      document.getElementById('btnLoopToggle').classList.toggle('active-toggle', loopEnabled);
+      showToast(loopEnabled ? 'Loop Enabled' : 'Loop Disabled');
+    }
+
+    function onScrubInput(val) {
+      pausePlayback();
+      seekToTime(parseFloat(val));
+    }
+
+    // 8. Production MP4 Export Workflow with Dedicated Progress Modal
+    function cancelActiveRender() {
+      cancelRenderRequested = true;
+      engineStatusText.textContent = 'Render cancelled by user.';
+    }
+
+    async function startExportWorkflow() {
+      pausePlayback();
+      if (window.innerWidth <= 920) switchTab('preview');
+
+      cancelRenderRequested = false;
+      const modal = document.getElementById('renderModal');
+      const bar = document.getElementById('renderProgressBar');
+      const frameStat = document.getElementById('renderFrameStat');
+      const pctStat = document.getElementById('renderPctStat');
+      const etaStat = document.getElementById('renderEtaStat');
+      const btnExport = document.getElementById('btnExportMain');
+
+      modal.classList.add('active');
+      btnExport.disabled = true;
+      bar.style.width = '0%';
+
+      const totalFrames = Math.round(duration * fps);
+      const targetNode = previewIframe.contentDocument.documentElement;
+      const startTimeMs = performance.now();
+
+      const updateModalUI = (f) => {
+        const done = f + 1;
+        const pct = Math.round((done / totalFrames) * 100);
+        const elapsedSec = (performance.now() - startTimeMs) / 1000;
+        const avgPerFrame = elapsedSec / done;
+        const remainSec = Math.max(0, Math.round((totalFrames - done) * avgPerFrame));
+
+        bar.style.width = `${pct}%`;
+        frameStat.textContent = `Frame: ${done} / ${totalFrames}`;
+        pctStat.textContent = `${pct}%`;
+        etaStat.textContent = `ETA: ~${remainSec}s`;
+      };
+
+      try {
+        const supportsWebCodecs = typeof window.VideoEncoder === 'function' && typeof window.Mp4Muxer !== 'undefined';
+        if (supportsWebCodecs) {
+          await renderWebCodecsMp4(targetNode, totalFrames, updateModalUI);
+        } else {
+          await renderFallbackWebm(targetNode, totalFrames, updateModalUI);
+        }
+      } catch (err) {
+        alert('Render error: ' + err.message);
+      } finally {
+        modal.classList.remove('active');
+        btnExport.disabled = false;
+      }
+    }
+
+    async function renderWebCodecsMp4(targetNode, totalFrames, onProgress) {
+      document.getElementById('renderModalTitle').textContent = `Encoding ${stageWidth}×${stageHeight} MP4...`;
+
+      const muxer = new Mp4Muxer.Muxer({
+        target: new Mp4Muxer.ArrayBufferTarget(),
+        video: { codec: 'avc', width: stageWidth, height: stageHeight },
+        fastStart: 'in-memory'
+      });
+
+      const encoder = new VideoEncoder({
+        output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+        error: (e) => console.error(e)
+      });
+
+      const codecProfile = (stageWidth * stageHeight > 1920 * 1080) ? 'avc1.640033' : 'avc1.64002a';
+      encoder.configure({
+        codec: codecProfile,
+        width: stageWidth,
+        height: stageHeight,
+        bitrate: stageWidth > 1080 ? 16_000_000 : 10_000_000,
+        framerate: fps
+      });
+
+      for (let f = 0; f < totalFrames; f++) {
+        if (cancelRenderRequested) {
+          encoder.close();
+          return;
+        }
+
+        seekToTime(f / fps);
+        await new Promise((r) => setTimeout(r, 16));
+
+        const frameCanvas = await modernScreenshot.domToCanvas(targetNode, {
+          width: stageWidth,
+          height: stageHeight,
+          scale: 1
+        });
+
+        const vFrame = new VideoFrame(frameCanvas, {
+          timestamp: Math.round((f / fps) * 1_000_000),
+          duration: Math.round((1 / fps) * 1_000_000)
+        });
+
+        encoder.encode(vFrame, { keyFrame: f % fps === 0 });
+        vFrame.close();
+        onProgress(f);
+      }
+
+      await encoder.flush();
+      muxer.finalize();
+
+      const blob = new Blob([muxer.target.buffer], { type: 'video/mp4' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `codemotion_${stageWidth}x${stageHeight}_${fps}fps.mp4`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      engineStatusText.textContent = `MP4 Downloaded (${stageWidth}×${stageHeight})!`;
+      showToast('MP4 Video Downloaded!');
+    }
+
+    async function renderFallbackWebm(targetNode, totalFrames, onProgress) {
+      const cnv = document.createElement('canvas');
+      cnv.width = stageWidth;
+      cnv.height = stageHeight;
+      const ctx = cnv.getContext('2d');
+
+      const stream = cnv.captureStream(fps);
+      const recorder = new MediaRecorder(stream, { videoBitsPerSecond: 12_000_000 });
+      const chunks = [];
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+      const donePromise = new Promise((r) => { recorder.onstop = r; });
+
+      recorder.start();
+      for (let f = 0; f < totalFrames; f++) {
+        if (cancelRenderRequested) {
+          recorder.stop();
+          return;
+        }
+        seekToTime(f / fps);
+        await new Promise((r) => setTimeout(r, 20));
+        const snap = await modernScreenshot.domToCanvas(targetNode, { width: stageWidth, height: stageHeight, scale: 1 });
+        ctx.clearRect(0, 0, stageWidth, stageHeight);
+        ctx.drawImage(snap, 0, 0, stageWidth, stageHeight);
+        onProgress(f);
+      }
+      recorder.stop();
+      await donePromise;
+
+      const blob = new Blob(chunks, { type: 'video/webm' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `codemotion_${stageWidth}x${stageHeight}.webm`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Video Downloaded!');
+    }
+
+    // 9. AI System Prompt Builder with Style Presets
+    document.getElementById('stylePresetGroup').addEventListener('click', (e) => {
+      const btn = e.target.closest('.style-chip');
+      if (!btn) return;
+      document.querySelectorAll('.style-chip').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedStylePreset = btn.getAttribute('data-style');
+      buildSystemPrompt();
+    });
+
+    function buildSystemPrompt() {
+      const topic = document.getElementById('topicInput').value || 'Product Promo Video';
+      const totalFrames = Math.round(duration * fps);
+      document.getElementById('systemPromptBox').value = `Act as an expert motion graphics designer and senior frontend developer.
+Create a deterministic ${duration}-second HTML/CSS/SVG/JS promotional video for: "${topic}".
+
+VISUAL & CREATIVE DIRECTION:
+- Style: ${selectedStylePreset}
+- Use crisp inline SVG illustrations, floating UI cards, and bold typography. Do NOT use external image URLs.
+
+STRICT ENGINE TECHNICAL CONTRACT (MANDATORY):
+1. Return a SINGLE complete HTML file (with embedded <style> and <script>).
+2. Target exact logical viewport: ${stageWidth}px width × ${stageHeight}px height (100vw × 100vh, overflow: hidden). Do NOT apply window resize scale() transforms on the root container.
+3. Expose metadata globals on window:
+   \`window.VIDEO_DURATION = ${duration};\`
+   \`window.VIDEO_FPS = ${fps};\`
+   \`window.TOTAL_FRAMES = ${totalFrames};\`
+4. Expose deterministic frame renderer:
+   \`window.renderFrame = function(timeInSeconds) { ... }\`
+   Calling \`window.renderFrame(t)\` for any timestamp \`t\` between \`0.0\` and \`${duration}.0\` must immediately compute and render the exact visual state for that frame.
+
+Return ONLY the raw HTML code block.`;
+    }
+
+    function copyGeneratedPrompt() {
+      const box = document.getElementById('systemPromptBox');
+      box.select();
+      navigator.clipboard.writeText(box.value);
+      showToast('AI System Prompt Copied!');
+    }
+
+    // Initialize Studio
+    buildSystemPrompt();
+    compileAndPreview();
+  </script>
+</body>
+</html>
